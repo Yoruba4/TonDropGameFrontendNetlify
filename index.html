@@ -9,7 +9,7 @@
     const tg = window.Telegram.WebApp;
     tg.ready();
     tg.expand();
-
+alert("Telegram username: " + tg.initDataUnsafe?.user?.username);
     const supabaseUrl = 'https://asugsnpfagvnazdkrwxd.supabase.co';
     const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFzdWdzbnBmYWd2bmF6ZGtyd3hkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAyNTkwNTYsImV4cCI6MjA2NTgzNTA1Nn0.4LhJsbLmE2r8qT4dc6UDeOnvAJeBvzXftaBdpLTpgVA';
     const supabase = supabase.createClient(supabaseUrl, supabaseKey);
