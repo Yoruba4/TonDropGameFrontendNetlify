@@ -3,110 +3,62 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>TonDrop Game</title>
+  <title>Ton Drop Game</title>
   <style>
-    body { font-family: sans-serif; text-align: center; padding: 20px; }
-    .hidden { display: none; }
-    button { margin: 10px; padding: 10px 20px; font-size: 16px; }
+    body {
+      font-family: sans-serif;
+      margin: 0;
+      padding: 40px 20px;
+      text-align: center;
+      background: linear-gradient(to bottom right, #4ade80, #22d3ee);
+      color: #111;
+    }
+    h1 {
+      font-size: 2em;
+    }
+    button {
+      display: block;
+      margin: 20px auto;
+      padding: 15px 25px;
+      font-size: 1.1em;
+      background: #2563eb;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #1e40af;
+    }
   </style>
 </head>
 <body>
-  <h1>TonDrop Game</h1>
+  <h1>Welcome to Ton Drop 💧</h1>
 
-  <div id="mainMenu">
-    <button onclick="showPage('gamePage')">Start Game</button>
-    <button onclick="showPage('leaderboardPage')">Leaderboard</button>
-    <button onclick="showPage('walletPage')">Wallet Settings</button>
-  </div>
+  <button id="start-btn">🎮 Start Game</button>
+  <button id="leaderboard-btn">🏆 Leaderboard</button>
+  <button id="boost-btn">💸 Boost (TON Payment)</button>
 
-  <div id="gamePage" class="hidden">
-    <h2>Game will go here</h2>
-    <p>Imagine balls dropping here 🎯</p>
-    <button onclick="showPage('mainMenu')">Back</button>
-  </div>
+  <script>
+    const tg = window.Telegram.WebApp;
 
-  <div id="leaderboardPage" class="hidden">
-    <h2>Leaderboard</h2>
-    <ul id="leaderboardList"></ul>
-    <button onclick="showPage('mainMenu')">Back</button>
-  </div>
+    tg.ready();
+    tg.expand();
 
-  <div id="walletPage" class="hidden">
-    <h2>Wallet Setup</h2>
-    <input type="text" id="tonAddress" placeholder="Enter your TON Wallet" />
-    <button onclick="saveWallet()">Save Wallet</button>
+    document.getElementById("start-btn").onclick = () => {
+      alert("🎮 Game would start here (to be added)");
+      // TODO: Load game logic (canvas, gameplay, etc.)
+    };
 
-    <h3>Developer TON Wallet</h3>
-    <p id="devWallet">Loading...</p>
+    document.getElementById("leaderboard-btn").onclick = () => {
+      alert("🏆 Leaderboard coming soon");
+      // You’ll later connect this to Supabase
+    };
 
-    <h3>Booster Price</h3>
-    <p id="boosterPrice">Loading...</p>
-
-    <button onclick="showPage('mainMenu')">Back</button>
-  </div>
-
-  <script type="module">
-    const supabaseUrl = 'https://asugsnpfagvnazdkrwxd.supabase.co';
-    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFzdWdzbnBmYWd2bmF6ZGtyd3hkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAyNTkwNTYsImV4cCI6MjA2NTgzNTA1Nn0.4LhJsbLmE2r8qT4dc6UDeOnvAJeBvzXftaBdpLTpgVA';
-    const client = supabase.createClient(supabaseUrl, supabaseKey);
-
-    function showPage(id) {
-      ['mainMenu', 'gamePage', 'leaderboardPage', 'walletPage'].forEach(page => {
-        document.getElementById(page).classList.add('hidden');
-      });
-      document.getElementById(id).classList.remove('hidden');
-      if (id === 'leaderboardPage') loadLeaderboard();
-      if (id === 'walletPage') loadDevWallet();
-    }
-
-    async function saveWallet() {
-      const address = document.getElementById('tonAddress').value;
-      if (!address) return alert("Enter your TON wallet address");
-
-      const username = window.Telegram?.WebApp?.initDataUnsafe?.user?.username || "anon";
-
-      const { data, error } = await client
-        .from('users')
-        .upsert({ username, ton_wallet: address });
-
-      if (error) {
-        alert("Error saving wallet");
-        console.error(error);
-      } else {
-        alert("Wallet saved successfully!");
-      }
-    }
-
-    async function loadLeaderboard() {
-      const { data, error } = await client
-        .from('users')
-        .select('username, total_score')
-        .order('total_score', { ascending: false })
-        .limit(10);
-
-      const list = document.getElementById('leaderboardList');
-      list.innerHTML = '';
-
-      data?.forEach(user => {
-        const li = document.createElement('li');
-        li.textContent = `${user.username || 'anon'} - ${user.total_score} pts`;
-        list.appendChild(li);
-      });
-    }
-
-    async function loadDevWallet() {
-      const { data, error } = await client
-        .from('dev_wallets')
-        .select('*')
-        .limit(1);
-
-      if (data && data[0]) {
-        document.getElementById('devWallet').textContent = data[0].ton_address;
-        document.getElementById('boosterPrice').textContent = data[0].booster_price + " TON";
-      }
-    }
+    document.getElementById("boost-btn").onclick = () => {
+      alert("💸 Pay 0.15 TON for boost — payment screen coming");
+      // Will later trigger TON QR/payment + backend call
+    };
   </script>
-
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 </body>
 </html>
