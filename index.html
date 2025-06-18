@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>TON Drop Game</title>
+  <title>Ton Drop Game</title>
+  <script src="https://unpkg.com/@supabase/supabase-js"></script>
   <style>
     body {
-      margin: 0;
-      font-family: "Segoe UI", sans-serif;
-      background: linear-gradient(to bottom right, #facc15, #10b981);
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(to right, #c084fc, #60a5fa);
       color: #111;
       display: flex;
       flex-direction: column;
@@ -16,25 +16,32 @@
       padding: 20px;
     }
 
-    #game, #wallet-section, #dev-wallet-section, #debug {
+    .card {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
       width: 100%;
       max-width: 400px;
-      background: white;
-      padding: 20px;
-      margin: 10px 0;
-      border-radius: 12px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+      margin-top: 20px;
+    }
+
+    h2 {
+      text-align: center;
     }
 
     button {
       padding: 10px 20px;
-      background: #0ea5e9;
+      background: #3b82f6;
       color: white;
       border: none;
       border-radius: 8px;
-      cursor: pointer;
       font-size: 1em;
-      margin-top: 10px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #2563eb;
     }
 
     input[type="text"] {
@@ -45,37 +52,25 @@
       border-radius: 8px;
     }
 
-    #debug {
-      font-size: 0.9em;
-      background: #f3f4f6;
-      color: #333;
-      white-space: pre-wrap;
+    #status {
+      margin-top: 10px;
+      font-weight: bold;
+      color: green;
     }
   </style>
 </head>
 <body>
-  <div id="game">
-    <h2>TON Drop Game</h2>
-    <p>Click "Save Wallet" to get started!</p>
-  </div>
 
-  <div id="wallet-section">
-    <h3>Your Wallet</h3>
-    <input type="text" id="wallet" placeholder="Enter your TON wallet address" />
+  <div class="card">
+    <h2>Ton Drop Game</h2>
+
+    <label>Enter your TON Wallet Address:</label>
+    <input type="text" id="wallet" placeholder="UQBy...">
     <button onclick="saveWallet()">Save Wallet</button>
+
+    <div id="status"></div>
   </div>
 
-  <div id="dev-wallet-section">
-    <h3>Support the Dev (0.15 TON)</h3>
-    <button onclick="buyBooster()">Pay & Activate Booster</button>
-  </div>
-
-  <div id="debug">
-    <strong>Debug Log:</strong>
-    <div id="log">Initializing...</div>
-  </div>
-
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
   <script>
     const supabaseUrl = 'https://asugsnpfagvnazdkrwxd.supabase.co';
     const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFzdWdzbnBmYWd2bmF6ZGtyd3hkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAyNTkwNTYsImV4cCI6MjA2NTgzNTA1Nn0.4LhJsbLmE2r8qT4dc6UDeOnvAJeBvzXftaBdpLTpgVA';
@@ -84,75 +79,26 @@
     const tg = window.Telegram.WebApp;
     tg.ready();
 
-    const log = msg => {
-      const logBox = document.getElementById("log");
-      logBox.innerText += `\n> ${msg}`;
-    };
-
-    let username = tg.initDataUnsafe?.user?.username || "";
-    log(`Username: ${username}`);
-
     async function saveWallet() {
       const wallet = document.getElementById("wallet").value.trim();
-      if (!username || !wallet) {
-        alert("Username or wallet missing");
-        log("❌ Username or wallet not provided");
+      const username = tg.initDataUnsafe?.user?.username;
+
+      if (!wallet || !username) {
+        alert("TON Wallet and Telegram Username required.");
         return;
       }
 
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from("users")
-        .upsert([{ username, ton_wallet: wallet }], { onConflict: ['username'] });
+        .upsert({ username, wallet });
 
       if (error) {
-        log(`❌ Save wallet error: ${error.message}`);
-        alert("Failed to save wallet.");
+        console.error("Error:", error.message);
+        document.getElementById("status").innerText = "❌ Failed to save wallet";
       } else {
-        log(`✅ Wallet saved for ${username}: ${wallet}`);
-        alert("Wallet saved successfully!");
+        document.getElementById("status").innerText = "✅ Wallet saved!";
       }
     }
-
-    async function buyBooster() {
-      const txHash = prompt("Enter TON transaction hash (starting with 'ton:')");
-      if (!txHash || !txHash.startsWith("ton:")) {
-        log("❌ Invalid TON transaction hash");
-        return alert("Invalid TON transaction hash");
-      }
-
-      const expiresAt = new Date(Date.now() + 60 * 60 * 1000).toISOString();
-
-      const { data, error } = await supabase
-        .from("users")
-        .update({ booster_expires_at: expiresAt })
-        .eq("username", username);
-
-      if (error) {
-        log(`❌ Booster update failed: ${error.message}`);
-        return alert("Failed to activate booster.");
-      }
-
-      alert("✅ Booster activated for 1 hour!");
-      log(`✅ Booster activated until ${expiresAt}`);
-    }
-
-    // Auto-load wallet if exists
-    window.onload = async () => {
-      if (!username) return;
-
-      const { data, error } = await supabase
-        .from("users")
-        .select("ton_wallet")
-        .eq("username", username)
-        .single();
-
-      if (data?.ton_wallet) {
-        document.getElementById("wallet").value = data.ton_wallet;
-        log(`ℹ️ Loaded wallet: ${data.ton_wallet}`);
-      } else {
-        log("ℹ️ No wallet saved yet");
-      }
-    };
   </script>
 </body>
 </html>
