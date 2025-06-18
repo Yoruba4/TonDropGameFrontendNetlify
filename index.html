@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>TonDrop Game</title>
+  <style>
+    body { font-family: sans-serif; text-align: center; padding: 20px; }
+    .hidden { display: none; }
+    button { margin: 10px; padding: 10px 20px; font-size: 16px; }
+  </style>
+</head>
+<body>
+  <h1>TonDrop Game</h1>
+
+  <div id="mainMenu">
+    <button onclick="showPage('gamePage')">Start Game</button>
+    <button onclick="showPage('leaderboardPage')">Leaderboard</button>
+    <button onclick="showPage('walletPage')">Wallet Settings</button>
+  </div>
+
+  <div id="gamePage" class="hidden">
+    <h2>Game will go here</h2>
+    <p>Imagine balls dropping here 🎯</p>
+    <button onclick="showPage('mainMenu')">Back</button>
+  </div>
+
+  <div id="leaderboardPage" class="hidden">
+    <h2>Leaderboard</h2>
+    <ul id="leaderboardList"></ul>
+    <button onclick="showPage('mainMenu')">Back</button>
+  </div>
+
+  <div id="walletPage" class="hidden">
+    <h2>Wallet Setup</h2>
+    <input type="text" id="tonAddress" placeholder="Enter your TON Wallet" />
+    <button onclick="saveWallet()">Save Wallet</button>
+
+    <h3>Developer TON Wallet</h3>
+    <p id="devWallet">Loading...</p>
+
+    <h3>Booster Price</h3>
+    <p id="boosterPrice">Loading...</p>
+
+    <button onclick="showPage('mainMenu')">Back</button>
+  </div>
+
+  <script type="module">
+    const supabaseUrl = 'https://asugsnpfagvnazdkrwxd.supabase.co';
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFzdWdzbnBmYWd2bmF6ZGtyd3hkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAyNTkwNTYsImV4cCI6MjA2NTgzNTA1Nn0.4LhJsbLmE2r8qT4dc6UDeOnvAJeBvzXftaBdpLTpgVA';
+    const client = supabase.createClient(supabaseUrl, supabaseKey);
+
+    function showPage(id) {
+      ['mainMenu', 'gamePage', 'leaderboardPage', 'walletPage'].forEach(page => {
+        document.getElementById(page).classList.add('hidden');
+      });
+      document.getElementById(id).classList.remove('hidden');
+      if (id === 'leaderboardPage') loadLeaderboard();
+      if (id === 'walletPage') loadDevWallet();
+    }
+
+    async function saveWallet() {
+      const address = document.getElementById('tonAddress').value;
+      if (!address) return alert("Enter your TON wallet address");
+
+      const username = window.Telegram?.WebApp?.initDataUnsafe?.user?.username || "anon";
+
+      const { data, error } = await client
+        .from('users')
+        .upsert({ username, ton_wallet: address });
+
+      if (error) {
+        alert("Error saving wallet");
+        console.error(error);
+      } else {
+        alert("Wallet saved successfully!");
+      }
+    }
+
+    async function loadLeaderboard() {
+      const { data, error } = await client
+        .from('users')
+        .select('username, total_score')
+        .order('total_score', { ascending: false })
+        .limit(10);
+
+      const list = document.getElementById('leaderboardList');
+      list.innerHTML = '';
+
+      data?.forEach(user => {
+        const li = document.createElement('li');
+        li.textContent = `${user.username || 'anon'} - ${user.total_score} pts`;
+        list.appendChild(li);
+      });
+    }
+
+    async function loadDevWallet() {
+      const { data, error } = await client
+        .from('dev_wallets')
+        .select('*')
+        .limit(1);
+
+      if (data && data[0]) {
+        document.getElementById('devWallet').textContent = data[0].ton_address;
+        document.getElementById('boosterPrice').textContent = data[0].booster_price + " TON";
+      }
+    }
+  </script>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+</body>
+</html>
