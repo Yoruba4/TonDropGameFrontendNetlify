@@ -4,61 +4,130 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Ton Drop Game</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <script>
+    const tg = window.Telegram.WebApp;
+    tg.expand();
+
+    const supabaseUrl = 'https://asugsnpfagvnazdkrwxd.supabase.co';
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFzdWdzbnBmYWd2bmF6ZGtyd3hkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAyNTkwNTYsImV4cCI6MjA2NTgzNTA1Nn0.4LhJsbLmE2r8qT4dc6UDeOnvAJeBvzXftaBdpLTpgVA';
+
+    const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+
+    async function saveWallet() {
+      const wallet = document.getElementById("wallet").value.trim();
+      const username = tg.initDataUnsafe?.user?.username;
+
+      if (!wallet || !username) {
+        alert("Please enter your TON wallet.");
+        return;
+      }
+
+      const { error } = await supabase
+        .from("users")
+        .upsert({ username, ton_wallet: wallet }, { onConflict: ['username'] });
+
+      if (error) {
+        alert("Error saving wallet.");
+      } else {
+        localStorage.setItem("ton_wallet", wallet);
+        document.getElementById("wallet-section").style.display = "none";
+        document.getElementById("main-buttons").style.display = "flex";
+        tg.HapticFeedback.notificationOccurred("success");
+      }
+    }
+
+    function startGame() {
+      alert("Game starting... (to be implemented)");
+      // You can redirect to /game.html if created
+    }
+
+    function showLeaderboard() {
+      alert("Coming soon: Leaderboard");
+      // You can redirect to /leaderboard.html later
+    }
+
+    function showDevWallet() {
+      alert("Coming soon: Dev Wallets page");
+      // You can redirect to /dev.html later
+    }
+
+    window.onload = () => {
+      if (localStorage.getItem("ton_wallet")) {
+        document.getElementById("wallet-section").style.display = "none";
+        document.getElementById("main-buttons").style.display = "flex";
+      }
+    };
+  </script>
   <style>
     body {
-      font-family: sans-serif;
       margin: 0;
-      padding: 40px 20px;
-      text-align: center;
-      background: linear-gradient(to bottom right, #4ade80, #22d3ee);
+      font-family: "Segoe UI", sans-serif;
+      background: linear-gradient(to bottom right, #6ee7b7, #3b82f6);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
       color: #111;
     }
-    h1 {
-      font-size: 2em;
+
+    h2 {
+      margin-bottom: 20px;
     }
+
+    #wallet-section, #main-buttons {
+      width: 100%;
+      max-width: 400px;
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+    }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 12px;
+      font-size: 1em;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      margin-bottom: 12px;
+    }
+
     button {
-      display: block;
-      margin: 20px auto;
-      padding: 15px 25px;
-      font-size: 1.1em;
+      width: 100%;
+      padding: 12px;
+      font-size: 1em;
       background: #2563eb;
       color: white;
       border: none;
-      border-radius: 10px;
+      border-radius: 8px;
       cursor: pointer;
+      margin-top: 10px;
     }
+
     button:hover {
-      background: #1e40af;
+      background: #1d4ed8;
+    }
+
+    #main-buttons {
+      display: none;
+      flex-direction: column;
+      gap: 10px;
     }
   </style>
 </head>
 <body>
-  <h1>Welcome to Ton Drop 💧</h1>
+  <h2>TON Drop</h2>
 
-  <button id="start-btn">🎮 Start Game</button>
-  <button id="leaderboard-btn">🏆 Leaderboard</button>
-  <button id="boost-btn">💸 Boost (TON Payment)</button>
+  <div id="wallet-section">
+    <input type="text" id="wallet" placeholder="Enter your TON wallet (e.g. UQBy...)" />
+    <button onclick="saveWallet()">Save Wallet</button>
+  </div>
 
-  <script>
-    const tg = window.Telegram.WebApp;
-
-    tg.ready();
-    tg.expand();
-
-    document.getElementById("start-btn").onclick = () => {
-      alert("🎮 Game would start here (to be added)");
-      // TODO: Load game logic (canvas, gameplay, etc.)
-    };
-
-    document.getElementById("leaderboard-btn").onclick = () => {
-      alert("🏆 Leaderboard coming soon");
-      // You’ll later connect this to Supabase
-    };
-
-    document.getElementById("boost-btn").onclick = () => {
-      alert("💸 Pay 0.15 TON for boost — payment screen coming");
-      // Will later trigger TON QR/payment + backend call
-    };
-  </script>
+  <div id="main-buttons">
+    <button onclick="startGame()">▶️ Start Game</button>
+    <button onclick="showLeaderboard()">🏆 Leaderboard</button>
+    <button onclick="showDevWallet()">💼 Dev Wallet</button>
+  </div>
 </body>
 </html>
