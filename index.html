@@ -3,33 +3,37 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Ton Drop Game</title>
+  <title>TON Drop</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
   <script>
     const tg = window.Telegram.WebApp;
+    tg.ready();
     tg.expand();
 
     const supabaseUrl = 'https://asugsnpfagvnazdkrwxd.supabase.co';
     const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFzdWdzbnBmYWd2bmF6ZGtyd3hkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAyNTkwNTYsImV4cCI6MjA2NTgzNTA1Nn0.4LhJsbLmE2r8qT4dc6UDeOnvAJeBvzXftaBdpLTpgVA';
-
     const supabase = supabase.createClient(supabaseUrl, supabaseKey);
 
     async function saveWallet() {
       const wallet = document.getElementById("wallet").value.trim();
-      const username = tg.initDataUnsafe?.user?.username;
+      const username = tg.initDataUnsafe?.user?.username || "Anonymous";
 
-      if (!wallet || !username) {
+      if (!wallet) {
         alert("Please enter your TON wallet.");
         return;
       }
+
+      console.log("Saving wallet:", wallet, "for username:", username);
 
       const { error } = await supabase
         .from("users")
         .upsert({ username, ton_wallet: wallet }, { onConflict: ['username'] });
 
       if (error) {
+        console.error("Supabase error:", error);
         alert("Error saving wallet.");
       } else {
+        alert("Wallet saved!");
         localStorage.setItem("ton_wallet", wallet);
         document.getElementById("wallet-section").style.display = "none";
         document.getElementById("main-buttons").style.display = "flex";
@@ -38,25 +42,24 @@
     }
 
     function startGame() {
-      alert("Game starting... (to be implemented)");
-      // You can redirect to /game.html if created
+      alert("Game starting... (coming soon)");
     }
 
     function showLeaderboard() {
       alert("Coming soon: Leaderboard");
-      // You can redirect to /leaderboard.html later
     }
 
     function showDevWallet() {
       alert("Coming soon: Dev Wallets page");
-      // You can redirect to /dev.html later
     }
 
     window.onload = () => {
-      if (localStorage.getItem("ton_wallet")) {
+      const wallet = localStorage.getItem("ton_wallet");
+      if (wallet) {
         document.getElementById("wallet-section").style.display = "none";
         document.getElementById("main-buttons").style.display = "flex";
       }
+      console.log("Telegram username:", tg.initDataUnsafe?.user?.username);
     };
   </script>
   <style>
